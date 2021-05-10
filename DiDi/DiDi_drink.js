@@ -12,132 +12,146 @@ $.detail = "";
 $.tail = "";
 const drinkURL = "https://sigma.xiaojukeji.com/api/drink";
 
+const wsgsig = [
+	"dd03-WziVdQy4iGgitH6QYwu5IonNqWzQXTOhZOz958WIqWzRsP5ZRLfFHop1hf8Rs1ejzHvIKynNrjowrHqroLzg5yWJ%2Fj%2BQsHIRpwQCIy4BUGfuq12nv2QDHoQL",
+	"dd03-9sX0VcMNyo2uG80TNrpyYgE4SNhsCuim%2BlQiTWe5SNht0yGy6aDXZg5Mxyat0%2B%2BkIeoRu01NYJHQbpRm2dymv0B8OyrvG8vS1hXtS0M5zy2X0Q8%2F1kmhYXL%2Bx%2F",
+	"dd03-XgIvOJkFaPKk9UWIZdBClNx9DItSdBcbYAENqzSgDItTaFX3QUT4kNVGbZDTako9yqAgn7rFgM3UEdKAoEZCkoVAbPcTFrQauhaDmNlA0Z4TEhiapBLIkNh79%2F",
+	"dd03-pF2DcL%2Fh%2BnQFIXeVhGauNHZU6gC6MCqy%2Fbdm4ZOt6gC5HGdmsmxt%2BHriLXs5Hn6wmi9pL1VhIcve6gYRWjLn%2BOrlL0cM6nEOjGLhM6hi2gjIIb2Zjj6XMHxlLA",
+	"dd03-Qur1lMz%2BMJ3bmguTkZPrOIm38QiJii%2BmlTSTxYX68QiKnmvyXIFYPIoLN3bKn0ikjMOkQ2Q%2BKoKCsXfkkPeyxSn7L%2BbNn0DXsP9POPuML3bJsgDXnwwPP27JN9",
+	"dd03-%2B7P%2BwqiIHSaFXWn4a6rmrUv53LZ6tDCA9IUukeQ43LZ5W0mHCTMpqUtJKw25WmzCfPqttkXINHAejf39GTUyrdnIKL27Wmubc61xkhnb8522Wfog0Y%2FvqdtL7q",
+	"dd03-2s%2Fs%2Fe6KDvHN09bZ0rY4Tad7a4qfDlXsGlxgYqF2a4qgGhcQdadCSaLHARAgGA3qAeZNpBHKF827cqyt9kSDYBH9ByLgGVGZEhkESE1Le41aEecnaETgTaF3AA",
+	"dd03-TZig5w8RQ%2Fb7RJE4juuoBYfyY9uGpphAiozsdI0ZY9u0QRFHqJfnAYNOPq30Q3LCkNvvDOJRSdDNzuOC%2F8W%2FdHuRPA3GQpa9h8skBxfPx%2F77O8EFUzoleYChR%2F",
+	"dd03-2B5viFB%2FBRwM2%2FWq0CdCpBHVcKde6ecvGfaNu%2F2scKdd1aXjdiY4oB9jCvkd1qoZAmegTad%2F0%2BT6MAJxECFHvdBVfKOaM9mZaXe%2Burarf4qcLA7y0C52pheVDq",
+];
+
 !(async () => {
-    $.Ticket = $.read("#DiDi");
-    $.now = new Date().getTime();
-    if (!$.Ticket) {
-        throw new ERR.TokenError("❌ 未获取或填写 Token");
-    } else {
-        await drink();
-        await $.info("滴滴喝水\n" + $.subTitle + "\n" + $.detail + "\n" + $.tail);
-        await $.notify("滴滴喝水 🥃", $.subTitle, $.detail + "\n" + $.tail);
-    }
+	$.Ticket = $.read("#DiDi");
+	if (!$.Ticket) {
+		throw new ERR.TokenError("❌ 未获取或填写 Token");
+	} else {
+		await drink();
+		await $.info("滴滴喝水\n" + $.subTitle + "\n" + $.detail + "\n" + $.tail);
+		await $.notify("滴滴喝水 🥃", $.subTitle, $.detail + "\n" + $.tail);
+	}
 })()
-    .catch((err) => {
-        if (err instanceof ERR.TokenError) {
-            $.notify("滴滴出行 - Token 错误", "", err.message, "OneTravel://");
-        } else if (err instanceof ERR.BodyError) {
-            $.notify("滴滴出行 - 返回错误", "", err.message);
-        } else {
-            $.notify(
-                "滴滴出行 - 出现错误",
-                "",
-                JSON.stringify(err, Object.getOwnPropertyNames(err))
-            );
-            $.error(JSON.stringify(err, Object.getOwnPropertyNames(err)));
-        }
-    })
-    .finally(() => $.done());
+	.catch((err) => {
+		if (err instanceof ERR.TokenError) {
+			$.notify("滴滴出行 - Token 错误", "", err.message, "OneTravel://");
+		} else if (err instanceof ERR.BodyError) {
+			$.notify("滴滴出行 - 返回错误", "", err.message);
+		} else {
+			$.notify(
+				"滴滴出行 - 出现错误",
+				"",
+				JSON.stringify(err, Object.getOwnPropertyNames(err))
+			);
+			$.error(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+		}
+	})
+	.finally(() => $.done());
 
 async function drink() {
-    await drinkInfo();
-    if ($.turn_id) {
-        await drinkBonus();
-    } else {
-        $.detail += "现在没水喝，下一杯水 ⬇️ 在 " + timeFormat($.drinkts) + "后。";
-    }
+	await drinkInfo();
+	if ($.turn_id) {
+		await drinkBonus();
+	} else {
+		$.detail +=
+			"现在没水喝，下一杯水 ⬇️ 在" +
+			($.drinkts == 0 ? "明天。" : " " + timeFormat($.drinkts) + "后。");
+	}
 }
 
 function drinkInfo() {
-    return $.post({
-        url: drinkURL + "/info",
-        headers: {
-            "Content-Type": "application/json",
-            ticket: $.Ticket,
-        },
-        body: "{}",
-    })
-        .then((resp) => {
-            $.log("drinkInfo: " + JSON.stringify(resp.body));
-            let obj = JSON.parse(resp.body);
-            if (obj.errno == 0) {
-                $.tail += obj.data.button_title.replace(/_/g, " ") + ": " + obj.data.text;
-                $.turn_id = obj.data.cups.filter((vo) => vo.staus == 3)[0]?.turn_id;
-                $.drinkts = obj.data.time_stamp;
-            } else {
-                $.info("drinkInfo: " + JSON.stringify(resp.body) + "\n请检查是否有喝水赚钱活动。");
-                throw new ERR.BodyError("请检查是否有喝水赚钱活动\n" + JSON.stringify(resp.body));
-            }
-        })
-        .catch((err) => {
-            $.error("drinkInfo: \n");
-            $.error(err);
-            throw new ERR.BodyError("喝水赚钱查询信息接口错误\n" + JSON.stringify(resp.body));
-        });
+	return $.post({
+		url: drinkURL + "/info?wsgsig=" + wsgsig[0],
+		headers: {
+			"Content-Type": "application/json",
+			ticket: $.Ticket,
+		},
+		body: "{}",
+	})
+		.then((resp) => {
+			$.log("drinkInfo: " + JSON.stringify(resp.body));
+			let obj = JSON.parse(resp.body);
+			if (obj.errno == 0) {
+				$.tail += obj.data.button_title.replace(/_/g, " ") + ": " + obj.data.text;
+				let turn = obj.data.cups.filter((vo) => vo.staus == 3)[0];
+				if (turn) $.turn_id = turn.turn_id;
+				$.drinkts = obj.data.time_stamp;
+			} else {
+				$.info("drinkInfo: " + JSON.stringify(resp.body) + "\n请检查是否有喝水赚钱活动。");
+				throw new ERR.BodyError("请检查是否有喝水赚钱活动\n" + JSON.stringify(resp.body));
+			}
+		})
+		.catch((err) => {
+			$.error("drinkInfo: \n");
+			$.error(err);
+			throw new ERR.BodyError("喝水赚钱查询信息接口错误\n" + JSON.stringify(err));
+		});
 }
 
 function drinkBonus() {
-    return $.post({
-        url: drinkURL + "/getBonus",
-        headers: {
-            "Content-Type": "application/json",
-            ticket: $.Ticket,
-        },
-        body: '{"turn_id":' + $.turn_id + "}",
-    })
-        .then((resp) => {
-            $.log("drinkBonus: " + JSON.stringify(resp.body));
-            let obj = JSON.parse(resp.body);
-            if (obj.errno == 0) {
-                if (obj.data.bonus_amount) {
-                    let drinkBonus = obj.data.bonus_amount;
-                    $.detail += "记得喝水，已领取 " + drinkBonus + " 福利金。";
-                } else {
-                    $.detail += "喝水福利金" + obj.data.message_text + "。";
-                }
-            } else {
-                $.info("drinkBonus: " + JSON.stringify(resp.body));
-            }
-        })
-        .catch((err) => {
-            $.error("drinkBonus: \n");
-            $.error(err);
-            throw new ERR.BodyError("喝水赚钱领取奖励接口错误\n" + JSON.stringify(resp.body));
-        });
+	return $.post({
+		url: drinkURL + "/getBonus?wsgsig=" + wsgsig[$.turn_id],
+		headers: {
+			"Content-Type": "application/json",
+			ticket: $.Ticket,
+		},
+		body: '{"turn_id":' + $.turn_id + "}",
+	})
+		.then((resp) => {
+			$.log("drinkBonus: " + JSON.stringify(resp.body));
+			let obj = JSON.parse(resp.body);
+			if (obj.errno == 0) {
+				if (obj.data.bonus_amount) {
+					let drinkBonus = obj.data.bonus_amount;
+					$.detail += "记得喝水，已领取 " + drinkBonus + " 福利金。";
+				} else {
+					$.detail += "喝水福利金: " + obj.data.message_text + "。";
+				}
+			} else {
+				$.info("drinkBonus: " + JSON.stringify(resp.body));
+			}
+		})
+		.catch((err) => {
+			$.error("drinkBonus: \n");
+			$.error(err);
+			throw new ERR.BodyError("喝水赚钱领取奖励接口错误\n" + JSON.stringify(err));
+		});
 }
 
 function timeFormat(time) {
-    let s = Math.floor(time % 60);
-    let h = Math.floor((time / 3600) % 24);
-    let m = Math.floor((time / 60) % 60);
-    if (m < 1) {
-        return s + " 秒";
-    } else if (h < 1) {
-        return m + " 分 " + s + " 秒";
-    } else {
-        return h + " 时 " + m + " 分 " + s + " 秒";
-    }
+	let s = Math.floor(time % 60);
+	let h = Math.floor((time / 3600) % 24);
+	let m = Math.floor((time / 60) % 60);
+	if (m < 1) {
+		return s + " 秒";
+	} else if (h < 1) {
+		return m + " 分 " + s + " 秒";
+	} else {
+		return h + " 时 " + m + " 分 " + s + " 秒";
+	}
 }
 
 function MYERR() {
-    class TokenError extends Error {
-        constructor(message) {
-            super(message);
-            this.name = "TokenError";
-        }
-    }
+	class TokenError extends Error {
+		constructor(message) {
+			super(message);
+			this.name = "TokenError";
+		}
+	}
 
-    class BodyError extends Error {
-        constructor(message) {
-            super(message);
-            this.name = "BodyError";
-        }
-    }
+	class BodyError extends Error {
+		constructor(message) {
+			super(message);
+			this.name = "BodyError";
+		}
+	}
 
-    return {
-        TokenError,
-        BodyError,
-    };
+	return {
+		TokenError,
+		BodyError,
+	};
 }
 
 // prettier-ignore
